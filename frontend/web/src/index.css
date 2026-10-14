@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink-950: #0b1020;
+  --color-ink-900: #121826;
+  --color-ink-800: #1b2335;
+  --color-ink-700: #263049;
+  --color-ink-600: #3a4766;
+  --color-accent: #78aaff;
+  --color-focus: #ffc45c;
+  --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  @apply bg-ink-950 text-slate-100 antialiased;
+}
+
+@utility card {
+  @apply rounded-2xl border border-ink-700 bg-ink-900/80 p-6 shadow-xl shadow-black/20;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-primary {
+  @apply btn bg-accent text-ink-950 hover:bg-sky-300;
+}
+
+@utility btn-ghost {
+  @apply btn border border-ink-600 text-slate-200 hover:bg-ink-800;
+}
+
+@utility input {
+  @apply w-full rounded-xl border border-ink-600 bg-ink-800 px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-accent focus:outline-none;
+}
+
+@utility label {
+  @apply mb-1.5 block text-sm font-medium text-slate-300;
+}
