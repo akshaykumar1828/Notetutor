@@ -1,0 +1,58 @@
+# NoteTutor AI: MongoDB + FastAPI (pipeline) + Nginx (React app)
+#
+#   docker compose up --build        -> http://localhost:8080 (uses MONGO_URL
+#                                       from .env, e.g. MongoDB Atlas)
+#   docker compose --profile local-db up --build
+#                                    -> same, with a local MongoDB container
+#                                       (leave MONGO_URL out of .env)
+#   docker compose down              -> stop everything
+#
+# Needs a .env file with GROQ_API_KEY (and optionally GEMINI_API_KEY,
+# JWT_SECRET, ADMIN_EMAIL) and the Kokoro voice files in models/tts/kokoro/.
+# Users, lessons, uploaded notes and videos are stored in MongoDB (GridFS).
+
+services:
+  db:
+    # Optional local database: only started with --profile local-db.
+    profiles: ["local-db"]
+    image: mongo:8.0
+    # --quiet stops it logging every connection (health checks included).
+    command: ["mongod", "--quiet"]
+    logging:
+      driver: "none"
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      start_period: 20s
+      retries: 30
+
+  api:
+    build: .
+    env_file: .env
+    environment:
+      # Local MongoDB container by default; set MONGO_URL in .env to use
+      # MongoDB Atlas (cloud) instead.
+      MONGO_URL: ${MONGO_URL:-mongodb://db:27017}
+      CORS_ORIGINS: http://localhost:8080
+    volumes:
+      # Only the AI-answer cache (saves free-tier quota) and voice models
+      # live on disk; lesson files are kept in MongoDB.
+      - ./data/cache:/app/data/cache
+      - ./models:/app/models
+    # Waits for the database itself (retries on startup), so it works with
+    # Atlas or the optional local container.
+    restart: on-failure
+
+  web:
+    build: ./frontend/web
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  mongo-data:
