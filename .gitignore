@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Secrets - never commit real keys
+.env
+.env.*
+!.env.example
+
+# Generated output and caches (lessons are stored in MongoDB)
+/data/
+
+# Large downloaded models (see docs/DEVELOPMENT.md)
+/models/
+
+# Frontend
+node_modules/
+dist/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

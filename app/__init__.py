@@ -1,0 +1,1 @@
+"""NoteTutor AI application package."""

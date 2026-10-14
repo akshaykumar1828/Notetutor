@@ -1,0 +1,1 @@
+"""Document ingestion package for NoteTutor AI (future milestones)."""
