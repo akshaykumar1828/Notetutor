@@ -81,9 +81,11 @@ class OnlineModelsUnavailable(RuntimeError):
 def _no_fallback(errors: str) -> None:
     if (os.environ.get("GROQ_API_KEY") or os.environ.get("GEMINI_API_KEY")) and not ALLOW_LOCAL_FALLBACK:
         raise OnlineModelsUnavailable(
-            "The online models (Groq and Gemini free tiers) are unavailable right now, most "
-            "likely because today's free quota is used up. Try again later, or "
-            "re-run with --allow-local to accept lower-quality local models.\n"
+            "The online models (Groq and Gemini free tiers) did not answer, even after "
+            "waiting several minutes. Either today's free quota is used up or the "
+            "providers are overloaded. Try again later (answers already received are "
+            "cached, so a retry continues quickly), or re-run with --allow-local to "
+            "accept lower-quality local models.\n"
             f"Details: {errors[:400]}"
         )
 
@@ -186,12 +188,20 @@ def _call_text_chain(prompt, temperature, max_tokens, json_mode, models) -> str:
                                json_mode=json_mode, temperature=temperature)
         except LLMCallError as exc:
             errors.append(str(exc))
-    if waits and min(waits)[0] <= MAX_CHAIN_WAIT_SECONDS:
+    # Per-minute limits (long documents send many requests) clear within a
+    # minute, so keep waiting for them instead of failing the whole lesson.
+    waited = 0.0
+    while waits and min(waits)[0] <= MAX_CHAIN_WAIT_SECONDS - waited:
         delay, model = min(waits)
         print(f"[llm_client] All providers busy; waiting {delay:.0f}s for {model}...")
         _sleep(delay + 1)
+        waited += delay + 1
+        waits = []
         try:
             return _call_groq_model(model, prompt, temperature, max_tokens, json_mode)
+        except GroqRateLimited as exc:
+            waits.append((exc.delay, model))
+            errors.append(f"{model} after waiting: {exc}")
         except LLMCallError as exc:
             errors.append(f"{model} after waiting: {exc}")
     _no_fallback(" | ".join(errors))
@@ -298,9 +308,11 @@ def _call_groq_model(
                 f"Unexpected Groq response shape: {exc}"
             ) from exc
 
-    raise LLMCallError(
-        f"Groq rate limit persisted after "
-        f"{MAX_RATE_LIMIT_RETRIES} retries: {last_exc}"
+    # Still busy after the short retries: a per-minute limit, which resets
+    # within a minute. Report it as a wait so the chain can retry later.
+    raise GroqRateLimited(
+        f"Groq rate limit persisted after {MAX_RATE_LIMIT_RETRIES} retries: {last_exc}",
+        MAX_RATE_LIMIT_WAIT_SECONDS,
     )
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
