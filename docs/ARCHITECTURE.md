@@ -44,6 +44,9 @@ Entry point: `app/pipeline/lesson_video.py`.
 - **Model fallback chain** (`common/llm_client.py`): Groq main model ->
   smaller Groq model -> Gemini -> optional local Ollama. Light tasks use the
   smaller model so the main model's per-minute limit is kept for content.
+- **Rate-limit waiting**: long documents regularly hit the free tier's
+  per-minute token limit; when Gemini is also busy, requests wait for the
+  limit to reset (up to five minutes) instead of failing the lesson.
 - **Fail fast**: if the online models are unavailable the run stops with a
   clear message instead of silently producing a low-quality lesson
   (`--allow-local` overrides).

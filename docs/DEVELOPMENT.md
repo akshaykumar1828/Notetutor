@@ -100,7 +100,10 @@ See [../evaluation/RESULTS.md](../evaluation/RESULTS.md).
 
 - About 2-3 new lessons per day fit Groq's free daily quota; re-running the
   same material reuses cached answers.
-- If Groq is busy, Gemini is asked; if every provider is unavailable the run
-  stops with a message rather than using a weaker local model.
+- If Groq is busy, Gemini is asked; if both are busy the request waits for
+  the per-minute limit to reset. A 10-page PDF therefore takes several
+  minutes, much of it waiting. Only if nothing answers for several minutes
+  does the run stop with a message rather than use a weaker local model.
+  "Try again" then continues quickly from the cached answers.
 - MongoDB Atlas free clusters (512 MB) pause after long inactivity - resume
   them from the Atlas dashboard.
