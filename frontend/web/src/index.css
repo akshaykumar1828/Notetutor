@@ -44,3 +44,30 @@ body {
 @utility label {
   @apply mb-1.5 block text-sm font-medium text-slate-300;
 }
+
+/* Login page scene preview: steps pop in, dots travel, progress fills. */
+@keyframes auth-pop {
+  0%, 8% { opacity: 0; transform: scale(0.8); }
+  18%, 85% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgb(120 170 255 / 0); }
+  25% { box-shadow: 0 0 0 6px rgb(120 170 255 / 0.18); }
+  100% { opacity: 0; transform: scale(1); }
+}
+@keyframes auth-dot {
+  0%, 20% { left: 0; opacity: 0; }
+  25% { opacity: 1; }
+  45% { left: calc(100% - 6px); opacity: 1; }
+  50%, 100% { left: calc(100% - 6px); opacity: 0; }
+}
+@keyframes auth-progress {
+  0% { width: 0; }
+  85% { width: 100%; }
+  100% { width: 100%; opacity: 0; }
+}
+.auth-pop { animation: auth-pop 4.5s ease-out infinite both; }
+.auth-dot { animation: auth-dot 4.5s ease-in-out infinite both; }
+.auth-progress { animation: auth-progress 4.5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-pop, .auth-dot, .auth-progress { animation: none; }
+  .auth-progress { width: 66%; }
+}
